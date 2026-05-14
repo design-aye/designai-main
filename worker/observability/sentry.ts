@@ -4,6 +4,10 @@ import { HTTPException } from 'hono/http-exception';
 import type { AppEnv } from '../types/appenv';
 
 export function sentryOptions(env: Env): Sentry.CloudflareOptions {
+    if (!env.SENTRY_DSN) {
+        return { dsn: undefined, enabled: false };
+    }
+
     const transportOptions: Sentry.CloudflareOptions['transportOptions'] = {};
     if (env.CF_ACCESS_ID && env.CF_ACCESS_SECRET) {
         transportOptions.headers = {
@@ -11,6 +15,14 @@ export function sentryOptions(env: Env): Sentry.CloudflareOptions {
             'CF-Access-Client-Secret': env.CF_ACCESS_SECRET,
         };
     }
+
+    const allowUrls: Sentry.CloudflareOptions['allowUrls'] = [];
+    if (env.CUSTOM_DOMAIN) {
+        allowUrls.push(
+            new RegExp(`^https://${env.CUSTOM_DOMAIN.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/api/.*$`)
+        );
+    }
+
     return {
         dsn: env.SENTRY_DSN,
         release: env.CF_VERSION_METADATA.id,
@@ -19,10 +31,7 @@ export function sentryOptions(env: Env): Sentry.CloudflareOptions {
         sendDefaultPii: true,
         tracesSampleRate: 1.0,
         transportOptions,
-        allowUrls: [
-            // Only capture errors from our API endpoints
-            new RegExp(`^https://${env.CUSTOM_DOMAIN.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/api/.*$`)
-        ]
+        ...(allowUrls.length > 0 && { allowUrls }),
     };
 }
 
