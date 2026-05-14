@@ -1369,7 +1369,7 @@ export default function Chat() {
 														theme: 'v1-dev',
 														automaticLayout: true,
 													}}
-													onChange={isEditMode ? (value) => setEditedContent(value ?? '') : undefined}
+													onChange={isEditMode ? (value) => setEditedContent((value as string | undefined) ?? '') : undefined}
 													onSelectionChange={setSelectedCode}
 													find={
 														edit &&
