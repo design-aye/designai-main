@@ -19,8 +19,6 @@ interface CSRFTokenData {
 export class CsrfService {
     static readonly COOKIE_NAME = 'csrf-token';
     static readonly HEADER_NAME = 'X-CSRF-Token';
-    // Note: defaults must be accessed via getDefaults(env) to ensure fresh config per request
-    private static _defaults: ReturnType<typeof getCSRFConfig> | null = null;
     static getDefaults(env: Env): ReturnType<typeof getCSRFConfig> {
         return getCSRFConfig(env);
     }

@@ -1,7 +1,5 @@
 import { ToolDefinition } from "../tools/types";
 import { SmartCodeGeneratorAgent } from "./smartGeneratorAgent";
-import { CurrentDevState } from "./state";
-import { z } from "zod";
 
 export function getSmartAgentTools(agent: SmartCodeGeneratorAgent): ToolDefinition<any, any>[] {
     return [

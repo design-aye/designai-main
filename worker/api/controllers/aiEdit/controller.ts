@@ -2,8 +2,9 @@ import { BaseController } from '../baseController';
 import { ApiResponse, ControllerResponse } from '../types';
 import type { RouteContext } from '../../types/route-context';
 import { AppService } from '../../../database/services/AppService';
-import { infer } from '../../../agents/inferutils/core';
+import { infer, type InferResponseString } from '../../../agents/inferutils/core';
 import { createSystemMessage, createUserMessage } from '../../../agents/inferutils/common';
+import { AIModels } from '../../../agents/inferutils/config.types';
 import { createLogger } from '../../../logger';
 import type { AiEditRequest, AiEditData } from './types';
 
@@ -67,9 +68,10 @@ export class AiEditController extends BaseController {
                     createUserMessage(userPrompt),
                 ],
                 actionKey: 'inlineCodeEdit',
+                modelName: AIModels.GEMINI_2_5_FLASH,
                 maxTokens: 32000,
                 temperature: 0,
-            });
+            }) as InferResponseString;
 
             return AiEditController.createSuccessResponse<AiEditData>({
                 editedContent: response.string,

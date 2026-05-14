@@ -242,7 +242,7 @@ export function handleWebSocketMessage(agent: SimpleCodeGeneratorAgent, connecti
                     sendError(connection, 'Agent not initialized');
                     break;
                 }
-                const fileStorage = new FileStorageService(agent.env);
+                const fileStorage = new FileStorageService((agent as unknown as { env: Env }).env);
                 fileStorage.getFiles(appId).then(dbFiles => {
                     if (dbFiles.length === 0) {
                         // No DB files yet — just redeploy current state

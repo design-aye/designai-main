@@ -106,7 +106,7 @@ export class LocalSandboxService extends BaseSandboxService {
         };
     }
 
-    async createInstance(templateName: string, projectName: string, webhookUrl?: string, envVars?: Record<string, string>): Promise<BootstrapResponse> {
+    async createInstance(templateName: string, projectName: string, _webhookUrl?: string, _envVars?: Record<string, string>): Promise<BootstrapResponse> {
         this.logger.info('Mock createInstance', { templateName, projectName });
         const runId = `mock-${templateName}-${Date.now()}`;
 
@@ -173,7 +173,7 @@ export class LocalSandboxService extends BaseSandboxService {
         return { success: true, message: "Mock instance shut down" };
     }
 
-    async writeFiles(instanceId: string, files: WriteFilesRequest['files'], commitMessage?: string): Promise<WriteFilesResponse> {
+    async writeFiles(_instanceId: string, files: WriteFilesRequest['files'], _commitMessage?: string): Promise<WriteFilesResponse> {
         for (const file of files) {
             this.filesMap.set(file.filePath, file.fileContents);
         }
@@ -184,7 +184,7 @@ export class LocalSandboxService extends BaseSandboxService {
         };
     }
 
-    async getFiles(instanceId: string, filePaths?: string[]): Promise<GetFilesResponse> {
+    async getFiles(_instanceId: string, filePaths?: string[]): Promise<GetFilesResponse> {
         const resultFiles = [];
         const paths = filePaths || Array.from(this.filesMap.keys());
         for (const path of paths) {
@@ -195,11 +195,11 @@ export class LocalSandboxService extends BaseSandboxService {
         return { success: true, files: resultFiles };
     }
 
-    async getLogs(instanceId: string): Promise<GetLogsResponse> {
+    async getLogs(_instanceId: string): Promise<GetLogsResponse> {
         return { success: true, logs: { stdout: "", stderr: "" } };
     }
 
-    async executeCommands(instanceId: string, commands: string[], timeout?: number): Promise<ExecuteCommandsResponse> {
+    async executeCommands(_instanceId: string, commands: string[], _timeout?: number): Promise<ExecuteCommandsResponse> {
         this.logger.info('Mock executeCommands', { commands });
         return {
             success: true,
@@ -212,15 +212,15 @@ export class LocalSandboxService extends BaseSandboxService {
         };
     }
 
-    async getInstanceErrors(instanceId: string): Promise<RuntimeErrorResponse> {
+    async getInstanceErrors(_instanceId: string): Promise<RuntimeErrorResponse> {
         return { success: true, errors: [], hasErrors: false };
     }
 
-    async clearInstanceErrors(instanceId: string): Promise<ClearErrorsResponse> {
+    async clearInstanceErrors(_instanceId: string): Promise<ClearErrorsResponse> {
         return { success: true };
     }
 
-    async runStaticAnalysisCode(instanceId: string, lintFiles?: string[]): Promise<StaticAnalysisResponse> {
+    async runStaticAnalysisCode(_instanceId: string, _lintFiles?: string[]): Promise<StaticAnalysisResponse> {
         return {
             success: true,
             lint: { issues: [], summary: { errorCount: 0, warningCount: 0, infoCount: 0 } },
@@ -236,11 +236,11 @@ export class LocalSandboxService extends BaseSandboxService {
         };
     }
 
-    async exportToGitHub(instanceId: string, request: GitHubExportRequest): Promise<GitHubExportResponse> {
+    async exportToGitHub(_instanceId: string, _request: GitHubExportRequest): Promise<GitHubExportResponse> {
         return { success: true, repositoryUrl: "https://github.com/mock/repo" };
     }
 
-    async pushToGitHub(instanceId: string, request: GitHubPushRequest): Promise<GitHubPushResponse> {
+    async pushToGitHub(_instanceId: string, _request: GitHubPushRequest): Promise<GitHubPushResponse> {
         return { success: true };
     }
 }

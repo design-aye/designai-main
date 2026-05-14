@@ -66,17 +66,15 @@
   //     "remote": true
   //   }
   // ],
-  "containers": [
-    {
-      "class_name": "UserAppSandboxService",
-      "image": "./SandboxDockerfile",
-      // Altering max_instances value will have no effect. Please use the MAX_SANDBOX_INSTANCES var instead.
-      "max_instances": 10,
-      // ATTENTION: Altering instance_type value will have no effect. Please use the SANDBOX_INSTANCE_TYPE var instead.
-      "instance_type": "standard-3",
-      "rollout_step_percentage": 100
-    }
-  ],
+  // "containers": [
+  //   {
+  //     "class_name": "UserAppSandboxService",
+  //     "image": "./SandboxDockerfile",
+  //     "max_instances": 10,
+  //     "instance_type": "standard-3",
+  //     "rollout_step_percentage": 100
+  //   }
+  // ],
   // IMPORTANT: Replace database_id with your own D1 database ID when deploying a new instance.
   // Run `wrangler d1 create designai-db` to create a new DB and get its ID.
   "d1_databases": [
