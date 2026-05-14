@@ -62,13 +62,6 @@ export default defineConfig({
 					if (id.includes('@sentry')) {
 						return 'sentry';
 					}
-					if (
-						id.includes('node_modules/react/') ||
-						id.includes('node_modules/react-dom/') ||
-						id.includes('node_modules/react-router')
-					) {
-						return 'react-core';
-					}
 					if (id.includes('node_modules/@radix-ui/')) {
 						return 'ui-radix';
 					}
