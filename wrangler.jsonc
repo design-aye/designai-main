@@ -1,0 +1,14 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "designai-main",
+  "compatibility_date": "2026-05-14",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "designai-main"
+  },
+  "compatibility_flags": [
+    "nodejs_compat"
+  ]
+}
