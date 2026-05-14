@@ -4,7 +4,7 @@
  */
 {
   // "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "designai",
+  "name": "designai-main",
   "main": "worker/index.ts",
   "compatibility_date": "2026-03-12",
   "compatibility_flags": [
@@ -59,13 +59,13 @@
   "images": {
     "binding": "IMAGES"
   },
-  "dispatch_namespaces": [
-    {
-      "binding": "DISPATCHER",
-      "namespace": "designai-default-namespace",
-      "remote": true
-    }
-  ],
+  // "dispatch_namespaces": [
+  //   {
+  //     "binding": "DISPATCHER",
+  //     "namespace": "designai-default-namespace",
+  //     "remote": true
+  //   }
+  // ],
   "containers": [
     {
       "class_name": "UserAppSandboxService",
@@ -83,7 +83,7 @@
     {
       "binding": "DB",
       "database_name": "designai-db",
-      "database_id": "4abe6cbc-2058-4773-ba54-93b903c0e9f3",
+      "database_id": "03673d1b-cbfa-4263-b7ea-d0f9c6921c15",
       "migrations_dir": "migrations",
       "remote": true
     }
@@ -116,7 +116,7 @@
   "kv_namespaces": [
     {
       "binding": "DesignAIStore",
-      "id": "58552cc177b044a2aac33364a08789e9",
+      "id": "50357ff6a3214ab191383937b77f2625",
       "remote": true
     }
   ],
@@ -138,24 +138,15 @@
       "tag": "v2"
     }
   ],
-  // IMPORTANT: Replace these routes and zone_id with your own domain and Cloudflare zone ID.
-  // Set CUSTOM_DOMAIN in your .dev.vars / production secrets to match the pattern here.
-  "routes": [
-    {
-        "pattern": "designai.dev",
-        "custom_domain": true
-    },
-    {
-        "pattern": "*designai.dev/*",
-        "custom_domain": false,
-        "zone_id": "ae4dc91ed6fad145bbb10f3b9bde1a76"
-    }
-],
+  // IMPORTANT: If you have a custom domain, add routes here.
+  // Example:
+  // "routes": [
+  //   { "pattern": "yourdomain.com", "custom_domain": true }
+  // ],
   "vars": {
     "TEMPLATES_REPOSITORY": "https://github.com/Digital-platoon/designai-templates",
     "ALLOWED_EMAIL": "anyone can use it",
-    "DISPATCH_NAMESPACE": "designai-default-namespace",
-    "ENABLE_READ_REPLICAS": "true",
+"ENABLE_READ_REPLICAS": "true",
     "CLOUDFLARE_AI_GATEWAY": "designai-gateway",
     "MAX_SANDBOX_INSTANCES": "10",
     "SANDBOX_INSTANCE_TYPE": "standard-3"
