@@ -14,6 +14,7 @@ declare namespace Cloudflare {
         CSRF_SECRET?: string;
         SECRETS_ENCRYPTION_KEY?: string;
         ENABLE_EMAIL_REGISTRATION?: string;
+        SKIP_EMAIL_VERIFICATION?: string;
 
         // --- OAuth Providers (runtime secrets) ---
         GOOGLE_CLIENT_ID?: string;
