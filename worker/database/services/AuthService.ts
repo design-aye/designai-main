@@ -114,21 +114,24 @@ export class AuthService extends BaseService {
             const userId = generateId();
             const now = new Date();
 
-            // Store user as unverified initially
+            const emailServiceAvailable = 'SEND_EMAIL' in this.env && this.env.SEND_EMAIL != null;
+            const skipVerification = this.env.SKIP_EMAIL_VERIFICATION === 'true' || !emailServiceAvailable;
+
             await this.database.insert(schema.users).values({
                 id: userId,
                 email: data.email.toLowerCase(),
                 passwordHash,
                 displayName: data.name || data.email.split('@')[0],
-                emailVerified: false, // Set as unverified by default
+                emailVerified: skipVerification,
                 provider: 'email',
                 providerId: userId,
                 createdAt: now,
                 updatedAt: now
             });
 
-            // Send verification email after user is created
-            await sendVerificationEmail(this.env as any, userId, data.email.toLowerCase());
+            if (!skipVerification) {
+                await sendVerificationEmail(this.env as any, userId, data.email.toLowerCase());
+            }
 
             // Get the created user
             const newUser = await this.database
