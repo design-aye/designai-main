@@ -45,6 +45,10 @@ export enum AIModels {
     // Cerebras models
     CEREBRAS_GPT_OSS = 'cerebras/gpt-oss-120b',
     CEREBRAS_QWEN_3_CODER = 'cerebras/qwen-3-coder-480b',
+
+    // NVIDIA NIM models — routed via integrate.api.nvidia.com
+    NVIDIA_KIMI_K2 = '[nvidia]moonshotai/kimi-k2.6',
+    NVIDIA_GLM_5 = '[nvidia]z-ai/glm-5.1',
 }
 
 export interface ModelConfig {

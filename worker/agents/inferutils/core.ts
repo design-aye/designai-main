@@ -284,6 +284,11 @@ export async function getConfigurationForModel(
                 baseURL: 'https://api.anthropic.com/v1/',
                 apiKey: env.ANTHROPIC_API_KEY || '',
             };
+        } else if (provider === 'nvidia') {
+            return {
+                baseURL: 'https://integrate.api.nvidia.com/v1',
+                apiKey: env.NVIDIA_API_KEY || '',
+            };
         }
         providerForcedOverride = provider as AIGatewayProviders;
     }

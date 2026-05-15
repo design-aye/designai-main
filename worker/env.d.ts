@@ -29,6 +29,7 @@ declare namespace Cloudflare {
         GOOGLE_AI_STUDIO_API_KEY?: string;
         ANTHROPIC_API_KEY?: string;
         OPENAI_API_KEY?: string;
+        NVIDIA_API_KEY?: string;
         SERPAPI_KEY?: string;
 
         // --- Cloudflare API & Account (runtime secrets) ---
