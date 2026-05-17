@@ -359,28 +359,26 @@ class ApiClient {
 
                 const errorData = data.error;
                 if (errorData && errorData.type) {
-                       // Send a toast notification for typed errors
+                    // Handle CSRF silently before showing any toast — retry with a fresh token
+                    if (errorData.type === SecurityErrorType.CSRF_VIOLATION && response.status === 403 && !isRetry) {
+                        this.csrfTokenInfo = null;
+                        return this.requestRaw(endpoint, options, true, noToast);
+                    }
+
+                    // Send a toast notification for typed errors
                     if (!noToast) {
                         toast.error(errorData.message);
                     }
                     switch (errorData.type) {
                         case SecurityErrorType.CSRF_VIOLATION:
-                            // Handle CSRF failures with retry
-                            if (response.status === 403 && !isRetry) {
-                                // Clear expired token and retry with fresh one
-                                this.csrfTokenInfo = null;
-                                return this.requestRaw(endpoint, options, true);
-                            }
+                            // Retry already attempted above and failed (isRetry=true); fall through
                             break;
                         case SecurityErrorType.RATE_LIMITED:
-                            // Handle rate limiting
-
                             throw RateLimitExceededError.fromRateLimitError(errorData as unknown as RateLimitError);
                         default:
-                            // Security error
                             throw new SecurityError(errorData.type, errorData.message);
-                        }
                     }
+                }
 
 
                     throw new ApiError(
@@ -1103,10 +1101,14 @@ class ApiClient {
 		email: string;
 		password: string;
 	}): Promise<ApiResponse<LoginResponseData>> {
-		return this.request<LoginResponseData>('/api/auth/login', {
+		const result = await this.request<LoginResponseData>('/api/auth/login', {
 			method: 'POST',
 			body: credentials,
 		});
+		// Invalidate stored CSRF token so the next request fetches a fresh one
+		// (the server may have changed the cookie during auth state transitions)
+		this.csrfTokenInfo = null;
+		return result;
 	}
 
 	/**
@@ -1117,10 +1119,13 @@ class ApiClient {
 		password: string;
 		name?: string;
 	}): Promise<ApiResponse<RegisterResponseData>> {
-		return this.request<RegisterResponseData>('/api/auth/register', {
+		const result = await this.request<RegisterResponseData>('/api/auth/register', {
 			method: 'POST',
 			body: data,
 		});
+		// Invalidate stored CSRF token so the next request fetches a fresh one
+		this.csrfTokenInfo = null;
+		return result;
 	}
 
 	/**
@@ -1169,9 +1174,13 @@ class ApiClient {
 	 * Logout current user
 	 */
 	async logout(): Promise<ApiResponse<{ message: string }>> {
-		return this.request<{ message: string }>('/api/auth/logout', {
+		const result = await this.request<{ message: string }>('/api/auth/logout', {
 			method: 'POST',
 		});
+		// Clear stored CSRF token — the server clears the cookie on logout,
+		// so the next request must fetch a fresh token
+		this.csrfTokenInfo = null;
+		return result;
 	}
 
 	/**

@@ -150,6 +150,7 @@
     "CLOUDFLARE_AI_GATEWAY": "designai-gateway",
     "MAX_SANDBOX_INSTANCES": "10",
     "SANDBOX_INSTANCE_TYPE": "standard-3",
+    "SANDBOX_SERVICE_TYPE": "disabled",
     "CUSTOM_DOMAIN": "designai-main.designaye-com.workers.dev"
   },
   "workers_dev": true,

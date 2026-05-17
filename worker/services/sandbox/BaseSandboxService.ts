@@ -63,7 +63,10 @@ import {
   export abstract class BaseSandboxService {
     protected logger: StructuredLogger;
     protected sandboxId: string;
-  
+
+    /** When false, the agent skips Cloudflare Workers deployment and shows a "code ready" state instead. */
+    readonly supportsCloudflareDeployment: boolean = true;
+
     constructor(sandboxId: string) {
       this.logger = createObjectLogger(this, 'BaseSandboxService');
       this.sandboxId = sandboxId;
@@ -80,13 +83,45 @@ import {
      * List all available templates
      * Returns: { success: boolean, templates: [...], count: number, error?: string }
      */
+    // Built-in template catalog used when SANDBOX_SERVICE_TYPE=local (no R2 or containers required)
+    private static readonly LOCAL_MOCK_CATALOG: TemplateInfo[] = [
+        {
+            name: 'minimal-react',
+            language: 'typescript',
+            frameworks: ['react', 'vite'],
+            description: {
+                selection: 'A React + Vite + TypeScript template for Cloudflare Workers. Best for SPAs, dashboards, games, interactive tools, and any project requiring component-based UI.',
+                usage: 'Provides a React 18 + Vite setup with TypeScript. Suitable for almost all frontend projects that need a modern component-based architecture.'
+            }
+        },
+        {
+            name: 'minimal-js',
+            language: 'javascript',
+            frameworks: ['vanilla', 'hono'],
+            description: {
+                selection: 'A minimal vanilla JS template with Hono for Cloudflare Workers. Best for simple landing pages, lightweight APIs, and projects that do not need a heavy frontend framework.',
+                usage: 'Provides a minimal Hono-based Worker with plain HTML/CSS/JS frontend. Ideal for simple static pages or thin API wrappers.'
+            }
+        }
+    ];
+
     static async listTemplates(): Promise<TemplateListResponse> {
+        // In local sandbox mode skip R2 entirely and return the built-in catalog
+        const serviceType = (env as { SANDBOX_SERVICE_TYPE?: string }).SANDBOX_SERVICE_TYPE;
+        if (serviceType === 'local' || serviceType === 'disabled' || !env.Sandbox) {
+            return {
+                success: true,
+                templates: BaseSandboxService.LOCAL_MOCK_CATALOG,
+                count: BaseSandboxService.LOCAL_MOCK_CATALOG.length
+            };
+        }
+
         try {
             const response = await env.TEMPLATES_BUCKET.get('template_catalog.json');
             if (response === null) {
                 throw new Error(`Failed to fetch template catalog: Template catalog not found`);
             }
-            
+
             const templates = await response.json() as TemplateInfo[];
 
             // For now, just filter out *next* templates

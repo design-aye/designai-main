@@ -557,22 +557,29 @@ export function createWebSocketMessageHandler(deps: HandleMessageDeps) {
                 setDeploymentError('');
                 setIsRedeployReady(false);
 
-                toast.success('🚀 Published! Click to open', {
-                    action: {
-                        label: 'Open',
-                        onClick: () => window.open(message.deploymentUrl, '_blank'),
-                    },
-                    duration: 8000,
-                });
+                if (message.deploymentUrl) {
+                    toast.success('🚀 Published! Click to open', {
+                        action: {
+                            label: 'Open',
+                            onClick: () => window.open(message.deploymentUrl, '_blank'),
+                        },
+                        duration: 8000,
+                    });
+                    sendMessage({
+                        id: 'cloudflare_deployment_completed',
+                        message: `Your project has been permanently deployed to Cloudflare Workers: ${message.deploymentUrl}`,
+                    });
+                } else {
+                    toast.success('✅ Code is ready! Use the GitHub export button to save your project.');
+                    sendMessage({
+                        id: 'cloudflare_deployment_completed',
+                        message: message.message || 'Your code is ready! Use the GitHub export button to save your project.',
+                    });
+                }
 
-                sendMessage({
-                    id: 'cloudflare_deployment_completed',
-                    message: `Your project has been permanently deployed to Cloudflare Workers: ${message.deploymentUrl}`,
-                });
-                
-                onDebugMessage?.('info', 
+                onDebugMessage?.('info',
                     'Deployment Completed - Redeploy Reset',
-                    `Deployment URL: ${message.deploymentUrl}\nPhase count at deployment: ${phaseTimeline.length}\nRedeploy button disabled until next phase`,
+                    `Deployment URL: ${message.deploymentUrl || '(local mode — no live URL)'}\nPhase count at deployment: ${phaseTimeline.length}`,
                     'Redeployment Management'
                 );
                 break;

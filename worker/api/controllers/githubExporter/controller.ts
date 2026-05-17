@@ -243,7 +243,16 @@ export class GitHubExporterController extends BaseController {
             };
 
             const baseUrl = new URL(request.url).origin;
-            const oauthProvider = GitHubExporterOAuthProvider.create(env, baseUrl);
+            let oauthProvider;
+            try {
+                oauthProvider = GitHubExporterOAuthProvider.create(env, baseUrl);
+            } catch {
+                this.logger.warn('GitHub export OAuth credentials not configured');
+                return GitHubExporterController.createErrorResponse<never>(
+                    'GitHub export is not configured. Set GITHUB_EXPORTER_CLIENT_ID and GITHUB_EXPORTER_CLIENT_SECRET as Worker secrets.',
+                    503,
+                );
+            }
 
             const authUrl = await oauthProvider.getAuthorizationUrl(
                 Buffer.from(JSON.stringify(state)).toString('base64')

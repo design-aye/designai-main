@@ -145,6 +145,12 @@ export class CodingAgentController extends BaseController {
                 writer.write("terminate");
                 writer.close();
                 this.logger.info(`Agent ${agentId} terminated successfully`);
+            }).catch((error: unknown) => {
+                const message = error instanceof Error ? error.message : String(error);
+                this.logger.error(`Agent ${agentId} initialization failed: ${message}`, error);
+                writer.write({ error: `Code generation failed: ${message}` });
+                writer.write("terminate");
+                writer.close();
             });
 
             this.logger.info(`Agent ${agentId} init launched successfully`);

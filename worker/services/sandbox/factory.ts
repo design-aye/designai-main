@@ -8,12 +8,20 @@ import { createLogger } from '../../logger';
 const logger = createLogger('SandboxFactory');
 
 export function getSandboxService(sessionId: string): BaseSandboxService {
-    if ((env as { SANDBOX_SERVICE_TYPE?: string }).SANDBOX_SERVICE_TYPE === 'runner') {
+    const serviceType = (env as { SANDBOX_SERVICE_TYPE?: string }).SANDBOX_SERVICE_TYPE;
+
+    if (serviceType === 'runner') {
         logger.info("[getSandboxService] Using runner service for sandboxing");
         return new RemoteSandboxServiceClient(sessionId);
     }
 
-    // Fallback to local mock sandbox if Sandbox binding is missing (e.g. containers disabled and no Docker)
+    // Local/disabled mode: in-memory mock, no real preview or Cloudflare deployment
+    if (serviceType === 'local' || serviceType === 'disabled') {
+        logger.info(`[getSandboxService] Using local mock sandbox (SANDBOX_SERVICE_TYPE=${serviceType})`);
+        return new LocalSandboxService(sessionId);
+    }
+
+    // Fallback to local mock sandbox if Sandbox binding is missing
     if (!env.Sandbox) {
         logger.warn("[getSandboxService] Sandbox binding missing, falling back to LocalSandboxService (Mock)");
         return new LocalSandboxService(sessionId);

@@ -102,7 +102,7 @@ export function getCSRFConfig(env: Env): CSRFConfig {
             return allowedOrigins.includes(origin);
         },
         tokenTTL: 2 * 60 * 60 * 1000, // 2 hours
-        rotateOnAuth: true,
+        rotateOnAuth: false,
         cookieName: 'csrf-token',
         headerName: 'X-CSRF-Token'
     };
@@ -191,7 +191,12 @@ export function getSecureHeadersConfig(env: Env): SecureHeadersConfig {
                 "https://api.github.com",
                 "https://api.cloudflare.com"
             ],
-            frameSrc: ["'none'"],
+            frameSrc: [
+                "'self'",
+                "https://*.workers.dev",
+                // Allow preview URLs from custom domain sandbox subdomains
+                ...(env.CUSTOM_DOMAIN ? [`https://*.${env.CUSTOM_DOMAIN}`] : []),
+            ],
             objectSrc: ["'none'"],
             mediaSrc: ["'self'"],
             workerSrc: ["'self'", "blob:"],
@@ -219,9 +224,10 @@ export function getSecureHeadersConfig(env: Env): SecureHeadersConfig {
         // Referrer Policy - Privacy-focused
         referrerPolicy: 'strict-origin-when-cross-origin',
         
-        // Cross-Origin policies
-        crossOriginEmbedderPolicy: 'require-corp',
-        crossOriginResourcePolicy: 'same-origin',
+        // Cross-Origin policies — COEP must be unsafe-none to allow preview iframes
+        // from workers.dev to load without requiring COEP headers on the sandboxed app.
+        crossOriginEmbedderPolicy: false,
+        crossOriginResourcePolicy: false,
         crossOriginOpenerPolicy: 'same-origin',
         
         // Origin Agent Cluster

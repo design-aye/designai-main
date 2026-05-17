@@ -28,10 +28,38 @@ import { BaseSandboxService } from "./BaseSandboxService";
  * It stores files in-memory and simulates command execution.
  */
 export class LocalSandboxService extends BaseSandboxService {
+    readonly supportsCloudflareDeployment = false;
+
     private filesMap: Map<string, string> = new Map();
     private instances: Map<string, any> = new Map();
 
     private static MOCK_TEMPLATES: Record<string, any> = {
+        "minimal-react": {
+            files: [
+                { filePath: "index.html", fileContents: "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" />\n    <title>App</title>\n  </head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"/src/main.tsx\"></script>\n  </body>\n</html>" },
+                { filePath: "src/main.tsx", fileContents: "import { StrictMode } from 'react';\nimport { createRoot } from 'react-dom/client';\nimport './index.css';\nimport App from './App';\n\ncreateRoot(document.getElementById('root')!).render(\n  <StrictMode>\n    <App />\n  </StrictMode>\n);" },
+                { filePath: "src/App.tsx", fileContents: "export default function App() {\n  return (\n    <main>\n      <h1>Hello World</h1>\n    </main>\n  );\n}" },
+                { filePath: "src/index.css", fileContents: "*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }\nbody { font-family: system-ui, sans-serif; }" },
+                { filePath: "package.json", fileContents: JSON.stringify({ name: "app", private: true, version: "0.0.0", type: "module", scripts: { dev: "vite", build: "tsc -b && vite build", preview: "vite preview" }, dependencies: { react: "^18.3.1", "react-dom": "^18.3.1" }, devDependencies: { "@types/react": "^18.3.1", "@types/react-dom": "^18.3.1", "@vitejs/plugin-react": "^4.3.1", typescript: "^5.5.3", vite: "^5.4.8" } }, null, 2) },
+                { filePath: "vite.config.ts", fileContents: "import { defineConfig } from 'vite';\nimport react from '@vitejs/plugin-react';\nexport default defineConfig({ plugins: [react()] });" },
+                { filePath: "tsconfig.json", fileContents: JSON.stringify({ compilerOptions: { target: "ES2020", useDefineForClassFields: true, lib: ["ES2020", "DOM", "DOM.Iterable"], module: "ESNext", skipLibCheck: true, moduleResolution: "bundler", allowImportingTsExtensions: true, isolatedModules: true, moduleDetection: "force", noEmit: true, jsx: "react-jsx", strict: true }, include: ["src"] }, null, 2) },
+                { filePath: "wrangler.jsonc", fileContents: "{\n  \"name\": \"user-app\",\n  \"compatibility_date\": \"2024-01-01\",\n  \"assets\": { \"directory\": \"./dist\", \"binding\": \"ASSETS\" }\n}" }
+            ],
+            fileTree: {
+                path: "/", type: "directory", children: [
+                    { path: "src", type: "directory", children: [
+                        { path: "src/main.tsx", type: "file" },
+                        { path: "src/App.tsx", type: "file" },
+                        { path: "src/index.css", type: "file" }
+                    ]},
+                    { path: "index.html", type: "file" },
+                    { path: "package.json", type: "file" },
+                    { path: "vite.config.ts", type: "file" },
+                    { path: "tsconfig.json", type: "file" },
+                    { path: "wrangler.jsonc", type: "file" }
+                ]
+            }
+        },
         "minimal-js": {
             files: [
                 { filePath: "public/index.html", fileContents: "<!doctype html>\n<html lang=\"en\">\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Minimal JS Template</title>\n    <link rel=\"stylesheet\" href=\"/styles.css\" />\n  </head>\n  <body>\n    <main class=\"container\">\n      <h1>Minimal JS Template</h1>\n      <p>This is a barebones single-page app served by Cloudflare Workers.</p>\n      <button id=\"btn-health\">Ping /api/health</button>\n      <pre id=\"result\"></pre>\n    </main>\n    <script src=\"/app.js\" defer></script>\n  </body>\n</html>" },
@@ -119,11 +147,12 @@ export class LocalSandboxService extends BaseSandboxService {
         }
 
         this.instances.set(runId, { templateName, projectName, status: 'running' });
-        const previewURL = `https://${runId}.mock.preview`;
+        // Local mock mode cannot provide a real preview URL — return empty string
+        // so the frontend skips the preview iframe instead of retrying a fake URL.
         return {
             success: true,
             runId,
-            previewURL
+            previewURL: ''
         };
     }
 
@@ -158,13 +187,13 @@ export class LocalSandboxService extends BaseSandboxService {
         };
     }
 
-    async getInstanceStatus(instanceId: string): Promise<BootstrapStatusResponse> {
+    async getInstanceStatus(_instanceId: string): Promise<BootstrapStatusResponse> {
         return {
             success: true,
             pending: false,
             isHealthy: true,
             message: "Mock instance running",
-            previewURL: `https://${instanceId}.mock.preview`
+            previewURL: ''
         };
     }
 
@@ -228,11 +257,11 @@ export class LocalSandboxService extends BaseSandboxService {
         };
     }
 
-    async deployToCloudflareWorkers(instanceId: string): Promise<DeploymentResult> {
+    async deployToCloudflareWorkers(_instanceId: string): Promise<DeploymentResult> {
         return {
             success: true,
-            message: "Mock deployment successful (did nothing)",
-            deployedUrl: `https://${instanceId}.workers.dev`
+            message: "Local sandbox mode — no Cloudflare Workers deployment performed.",
+            deployedUrl: ''
         };
     }
 

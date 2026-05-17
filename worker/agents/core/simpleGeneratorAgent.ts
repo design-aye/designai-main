@@ -1,4 +1,4 @@
-import { Agent, Connection } from 'agents';
+import { Agent, AgentContext, Connection } from 'agents';
 import {
     Blueprint,
     PhaseConceptGenerationSchemaType,
@@ -117,6 +117,14 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
 
     // Deployment queue management to prevent concurrent deployments
     private currentDeploymentPromise: Promise<PreviewType | null> | null = null;
+
+    constructor(ctx: AgentContext, env: Env) {
+        super(ctx, env);
+        // agents SDK v0.6.0 dynamically imports the 'ai' package inside ensureJsonSchema(),
+        // which Wrangler resolves as "assets/ai" (collides with the ASSETS binding name).
+        // getAITools() is never called here, so replacing with a no-op is safe.
+        Object.assign(this.mcp, { ensureJsonSchema: async () => {} });
+    }
 
     private healthCheckInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -676,7 +684,10 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
     async executeReviewCycle(): Promise<CurrentDevState> {
         this.logger().info("Executing REVIEWING state");
 
-        const reviewCycles = 2;
+        const reviewCycles = 1;
+        const MAX_FILES_TO_FIX = 8;
+        const REGENERATION_BATCH_SIZE = 3;
+
         if (this.state.reviewingInitiated) {
             this.logger().info("Reviewing already initiated, skipping");
             return CurrentDevState.IDLE;
@@ -690,7 +701,6 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
             this.logger().info("Starting code review and improvement cycle...");
 
             for (let i = 0; i < reviewCycles; i++) {
-                // Check if user input came during review - if so, go back to phase generation
                 if (this.state.pendingUserInputs.length > 0) {
                     this.logger().info("User input received during review, transitioning back to PHASE_GENERATING");
                     return CurrentDevState.PHASE_GENERATING;
@@ -709,31 +719,34 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
 
                 if (issuesFound) {
                     this.logger().info(`Issues found in review cycle ${i + 1}`, { issuesFound });
-                    const promises = [];
 
-                    for (const fileToFix of reviewResult.filesToFix) {
-                        if (!fileToFix.require_code_changes) continue;
+                    const filesToProcess = reviewResult.filesToFix
+                        .filter(f => f.require_code_changes)
+                        .slice(0, MAX_FILES_TO_FIX);
 
-                        const fileToRegenerate = this.fileManager.getGeneratedFile(fileToFix.filePath);
-                        if (!fileToRegenerate) {
-                            this.logger().warn(`File to fix not found in generated files: ${fileToFix.filePath}`);
-                            continue;
-                        }
+                    this.logger().info(`Fixing ${filesToProcess.length} files (capped at ${MAX_FILES_TO_FIX})`);
 
-                        promises.push(this.regenerateFile(
-                            fileToRegenerate,
-                            fileToFix.issues,
-                            0
-                        ));
+                    const allFixedFiles: FileOutputType[] = [];
+
+                    for (let b = 0; b < filesToProcess.length; b += REGENERATION_BATCH_SIZE) {
+                        const batch = filesToProcess.slice(b, b + REGENERATION_BATCH_SIZE);
+                        const batchPromises = batch.map(fileToFix => {
+                            const fileToRegenerate = this.fileManager.getGeneratedFile(fileToFix.filePath);
+                            if (!fileToRegenerate) {
+                                this.logger().warn(`File to fix not found in generated files: ${fileToFix.filePath}`);
+                                return Promise.resolve(null);
+                            }
+                            return this.regenerateFile(fileToRegenerate, fileToFix.issues, 0);
+                        });
+
+                        const batchResults = await Promise.allSettled(batchPromises);
+                        const batchFiles = (batchResults
+                            .map(r => r.status === "fulfilled" ? r.value : null)
+                            .filter(r => r !== null)) as FileOutputType[];
+                        allFixedFiles.push(...batchFiles);
                     }
 
-                    const fileResults = await Promise.allSettled(promises);
-                    const files: FileOutputType[] = fileResults.map(result => result.status === "fulfilled" ? result.value : null).filter((result) => result !== null);
-
-                    await this.deployToSandbox(files, false, "fix: Applying code review fixes");
-
-                    // await this.applyDeterministicCodeFixes();
-
+                    await this.deployToSandbox(allFixedFiles, false, "fix: Applying code review fixes");
                     this.logger().info("Completed regeneration for review cycle");
                 } else {
                     this.logger().info("Code review found no issues. Review cycles complete.");
@@ -741,7 +754,6 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
                 }
             }
 
-            // Check again for user input before finalizing
             if (this.state.pendingUserInputs.length > 0) {
                 this.logger().info("User input received after review, transitioning back to PHASE_GENERATING");
                 return CurrentDevState.PHASE_GENERATING;
@@ -765,7 +777,6 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
     async executeFinalizing(): Promise<CurrentDevState> {
         this.logger().info("Executing FINALIZING state - final review and cleanup");
 
-        // Only do finalizing stage if it wasn't done before
         if (this.state.mvpGenerated) {
             this.logger().info("Finalizing stage already done");
             return CurrentDevState.REVIEWING;
@@ -775,33 +786,9 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
             mvpGenerated: true
         });
 
-        const phaseConcept: PhaseConceptType = {
-            name: "Finalization and Review",
-            description: "Full polishing and final review of the application",
-            files: [],
-            lastPhase: true
-        }
-
-        this.setState({
-            ...this.state,
-            generatedPhases: [
-                ...this.state.generatedPhases,
-                {
-                    ...phaseConcept,
-                    completed: false
-                }
-            ]
-        });
-
-        const currentIssues = await this.fetchAllIssues(true);
-
-        // Run final review and cleanup phase
-        await this.implementPhase(phaseConcept, currentIssues);
-
         const numFilesGenerated = this.fileManager.getGeneratedFilePaths().length;
-        this.logger().info(`Finalization complete. Generated ${numFilesGenerated}/${this.getTotalFiles()} files.`);
+        this.logger().info(`Finalization complete. Generated ${numFilesGenerated} files.`);
 
-        // Transition to IDLE - generation complete
         return CurrentDevState.REVIEWING;
     }
 
@@ -1911,6 +1898,21 @@ export class SimpleCodeGeneratorAgent extends Agent<Env, CodeGenState> {
                     });
                     return null;
                 }
+            }
+
+            // Local/disabled sandbox mode — live deployment is not supported.
+            // Persist files so GitHub export still works, then tell the user their code is ready.
+            if (!this.getSandboxServiceClient().supportsCloudflareDeployment) {
+                this.logger().info('[DeployToCloudflare] Sandbox does not support Cloudflare deployment; skipping');
+                await this.persistFilesAndSnapshot(
+                    `Generated — ${new Date().toISOString()}`,
+                    'deploy',
+                );
+                this.broadcast(WebSocketMessageResponses.CLOUDFLARE_DEPLOYMENT_COMPLETED, {
+                    message: 'Your code is ready! Use the GitHub export button to save your project.',
+                    deploymentUrl: '',
+                });
+                return null;
             }
 
             this.logger().info('[DeployToCloudflare] Prerequisites met, initiating deployment', {
