@@ -136,11 +136,10 @@
       "tag": "v2"
     }
   ],
-  // IMPORTANT: If you have a custom domain, add routes here.
-  // Example:
-  // "routes": [
-  //   { "pattern": "designerai.dev", "custom_domain": true }
-  // ],
+  "routes": [
+    { "pattern": "designai.dev", "custom_domain": true },
+    { "pattern": "www.designai.dev", "custom_domain": true }
+  ],
   "vars": {
     "TEMPLATES_REPOSITORY": "https://github.com/Digital-platoon/designai-templates",
     "ALLOWED_EMAIL": "",
@@ -151,7 +150,7 @@
     "MAX_SANDBOX_INSTANCES": "10",
     "SANDBOX_INSTANCE_TYPE": "standard-3",
     "SANDBOX_SERVICE_TYPE": "disabled",
-    "CUSTOM_DOMAIN": "designai-main.designaye-com.workers.dev"
+    "CUSTOM_DOMAIN": "designai.dev"
   },
   "workers_dev": true,
   "preview_urls": true

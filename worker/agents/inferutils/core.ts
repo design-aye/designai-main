@@ -285,6 +285,17 @@ export async function getConfigurationForModel(
                 apiKey: env.ANTHROPIC_API_KEY || '',
             };
         } else if (provider === 'nvidia') {
+            const accountId = env.CLOUDFLARE_ACCOUNT_ID || '';
+            const gatewayId = env.CLOUDFLARE_AI_GATEWAY || '';
+            if (accountId && gatewayId) {
+                return {
+                    baseURL: `https://gateway.ai.cloudflare.com/v1/${accountId}/${gatewayId}/custom-nvidia/integrate.api.nvidia.com/v1`,
+                    apiKey: env.NVIDIA_API_KEY || '',
+                    defaultHeaders: env.CLOUDFLARE_AI_GATEWAY_TOKEN ? {
+                        'cf-aig-authorization': `Bearer ${env.CLOUDFLARE_AI_GATEWAY_TOKEN}`,
+                    } : undefined,
+                };
+            }
             return {
                 baseURL: 'https://integrate.api.nvidia.com/v1',
                 apiKey: env.NVIDIA_API_KEY || '',
