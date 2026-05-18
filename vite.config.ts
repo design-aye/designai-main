@@ -52,6 +52,14 @@ export default defineConfig({
 	cacheDir: 'node_modules/.vite',
 	build: {
 		sourcemap: false,
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true,
+			},
+		},
+		reportCompressedSize: false,
+		chunkSizeWarningLimit: 2000,
 		rollupOptions: {
 			external: ['ai', 'cloudflare:workers', 'cloudflare:email'],
 			output: {
