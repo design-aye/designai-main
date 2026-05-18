@@ -35,8 +35,8 @@ export enum AIModels {
     OPENAI_O4_MINI = 'openai/o4-mini',
     OPENAI_CHATGPT_4O_LATEST = 'openai/chatgpt-4o-latest',
     OPENAI_4_1 = 'openai/gpt-4.1-2025-04-14',
-    OPENAI_5 = 'openai/gpt-5',
-    OPENAI_5_MINI = 'openai/gpt-5-mini',
+    OPENAI_5 = 'openai/gpt-4.1',
+    OPENAI_5_MINI = 'openai/gpt-4.1-mini',
     OPENAI_OSS = 'openai/gpt-oss-120b',
 
     // OPENROUTER_QWEN_3_CODER = '[openrouter]qwen/qwen3-coder',
