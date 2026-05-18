@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git push *)",
+      "Bash(cd /d \"C:\\\\Users\\\\Nahid\\\\Desktop\\\\designai-main\")",
+      "Bash(dir /s /b \"sandboxSdkClient.ts\")",
+      "Bash(dir /s /b \"*.ts\")",
+      "Bash(cd \"C:\\\\Users\\\\Nahid\\\\Desktop\\\\designai-main\\\\designai-main\" && ls -la SandboxDockerfile 2>&1 && ls -la ../SandboxDockerfile 2>&1 && ls -la container/ 2>&1)",
+      "Bash(npm run *)",
+      "Bash(npx wrangler *)"
+    ]
+  }
+}
