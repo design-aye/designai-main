@@ -6,7 +6,7 @@
 	"scripts": {
 		"setup": "tsx scripts/setup.ts",
 		"dev": "DEV_MODE=true vite",
-		"build": "tsc -b --incremental && NODE_OPTIONS=--max-old-space-size=4096 vite build",
+		"build": "tsc -b --incremental && NODE_OPTIONS=--max-old-space-size=12288 vite build",
 		"lint": "eslint .",
 		"preview": "npm run build && vite preview",
 		"deploy": "bun --env-file .prod.vars scripts/deploy.ts",
