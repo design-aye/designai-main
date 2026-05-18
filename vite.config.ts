@@ -80,6 +80,18 @@ export default defineConfig({
 					if (id.includes('node_modules/date-fns') || id.includes('node_modules/lodash') || id.includes('node_modules/clsx')) {
 						return 'utils';
 					}
+					if (id.includes('node_modules/@babel/')) {
+						return 'babel';
+					}
+					if (id.includes('node_modules/react-dom') || id.includes('node_modules/react-router') || id.includes('node_modules/react/')) {
+						return 'react-core';
+					}
+					if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-')) {
+						return 'charts';
+					}
+					if (id.includes('node_modules/openai')) {
+						return 'openai';
+					}
 					if (id.includes('node_modules')) {
 						return 'vendor';
 					}
