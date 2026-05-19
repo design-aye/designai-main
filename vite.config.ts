@@ -52,9 +52,11 @@ export default defineConfig({
 	cacheDir: 'node_modules/.vite',
 	build: {
 		sourcemap: false,
-		minify: 'esbuild',
-		esbuildOptions: {
-			drop: ['console'],
+		minify: 'terser',
+		terserOptions: {
+			compress: {
+				drop_console: true,
+			},
 		},
 		reportCompressedSize: false,
 		chunkSizeWarningLimit: 2000,
