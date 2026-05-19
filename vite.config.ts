@@ -62,47 +62,55 @@ export default defineConfig({
 		chunkSizeWarningLimit: 2000,
 		rollupOptions: {
 			external: ['ai', 'cloudflare:workers', 'cloudflare:email'],
-			output: {
-				manualChunks(id) {
-					if (id.includes('node_modules/monaco-editor')) {
-						return 'monaco';
-					}
-					if (id.includes('@sentry')) {
-						return 'sentry';
-					}
-					if (id.includes('node_modules/@radix-ui/')) {
-						return 'ui-radix';
-					}
-					if (id.includes('node_modules/lucide-react') || id.includes('node_modules/react-feather')) {
-						return 'ui-icons';
-					}
-					if (id.includes('node_modules/rehype') || id.includes('node_modules/remark') || id.includes('node_modules/react-markdown')) {
-						return 'parser-md';
-					}
-					if (id.includes('node_modules/framer-motion')) {
-						return 'animation';
-					}
-					if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/zod')) {
-						return 'forms';
-					}
-					if (id.includes('node_modules/date-fns') || id.includes('node_modules/lodash') || id.includes('node_modules/clsx')) {
-						return 'utils';
-					}
-					if (id.includes('node_modules/@babel/')) {
-						return 'babel';
-					}
-					if (id.includes('node_modules/react-dom') || id.includes('node_modules/react-router') || id.includes('node_modules/react/')) {
-						return 'react-core';
-					}
-					if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-')) {
-						return 'charts';
-					}
-					if (id.includes('node_modules/openai')) {
-						return 'openai';
-					}
-					if (id.includes('node_modules')) {
-						return 'vendor';
-					}
+		},
+	},
+	environments: {
+		client: {
+			build: {
+				rollupOptions: {
+					output: {
+						manualChunks(id) {
+							if (id.includes('node_modules/monaco-editor')) {
+								return 'monaco';
+							}
+							if (id.includes('@sentry')) {
+								return 'sentry';
+							}
+							if (id.includes('node_modules/@radix-ui/')) {
+								return 'ui-radix';
+							}
+							if (id.includes('node_modules/lucide-react') || id.includes('node_modules/react-feather')) {
+								return 'ui-icons';
+							}
+							if (id.includes('node_modules/rehype') || id.includes('node_modules/remark') || id.includes('node_modules/react-markdown')) {
+								return 'parser-md';
+							}
+							if (id.includes('node_modules/framer-motion')) {
+								return 'animation';
+							}
+							if (id.includes('node_modules/react-hook-form') || id.includes('node_modules/zod')) {
+								return 'forms';
+							}
+							if (id.includes('node_modules/date-fns') || id.includes('node_modules/lodash') || id.includes('node_modules/clsx')) {
+								return 'utils';
+							}
+							if (id.includes('node_modules/@babel/')) {
+								return 'babel';
+							}
+							if (id.includes('node_modules/react-dom') || id.includes('node_modules/react-router') || id.includes('node_modules/react/')) {
+								return 'react-core';
+							}
+							if (id.includes('node_modules/recharts') || id.includes('node_modules/d3-') || id.includes('node_modules/victory-')) {
+								return 'charts';
+							}
+							if (id.includes('node_modules/openai')) {
+								return 'openai';
+							}
+							if (id.includes('node_modules')) {
+								return 'vendor';
+							}
+						},
+					},
 				},
 			},
 		},
