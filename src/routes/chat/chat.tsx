@@ -38,6 +38,8 @@ import { useImageUpload } from '@/hooks/use-image-upload';
 import { useDragDrop } from '@/hooks/use-drag-drop';
 import { ImageAttachmentPreview } from '@/components/image-attachment-preview';
 
+type TerminalLog = { id: string; content: string; type: 'command' | 'stdout' | 'stderr' | 'info' | 'error' | 'warn' | 'debug'; timestamp: number; source?: string };
+
 export default function Chat() {
 	const { chatId: urlChatId } = useParams();
 
@@ -141,6 +143,7 @@ export default function Chat() {
 		images: userImages,
 		agentMode: agentMode as 'deterministic' | 'smart',
 		onDebugMessage: addDebugMessage,
+		onTerminalMessage: handleTerminalMessage,
 	});
 
 	// GitHub export functionality - use urlChatId directly from URL params
@@ -162,8 +165,11 @@ export default function Chat() {
 	const [aiEditInstruction, setAiEditInstruction] = useState('');
 	const [isAiEditing, setIsAiEditing] = useState(false);
 
-	// Terminal state
-	// const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>([]);
+	// Terminal state — UI currently disabled but logs are collected for when it's re-enabled
+	const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>([]);
+	const handleTerminalMessage = useCallback((log: TerminalLog) => {
+		setTerminalLogs((prev) => [...prev, log]);
+	}, []);
 
 	// Debug panel state
 	const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);

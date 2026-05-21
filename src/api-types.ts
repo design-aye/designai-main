@@ -224,6 +224,7 @@ export type RegisterResponseData = SessionResponse & {
 export type ProfileResponseData = {
   user: AuthUser;
   sessionId: string;
+  expiresAt: Date | null;
 };
 
 export interface AuthProvidersResponseData {

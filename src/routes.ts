@@ -22,7 +22,7 @@ const routes = [
 			},
 			{
 				path: 'chat/:chatId',
-				Component: Chat,
+				element: React.createElement(ProtectedRoute, { children: React.createElement(Chat) }),
 			},
 			{
 				path: 'profile',

@@ -142,15 +142,13 @@ export class CodingAgentController extends BaseController {
                 sandboxSessionId
             }, body.agentMode || defaultCodeGenArgs.agentMode) as Promise<CodeGenState>;
             agentPromise.then(async (_state: CodeGenState) => {
-                writer.write("terminate");
-                writer.close();
+                await writer.write("terminate");
                 this.logger.info(`Agent ${agentId} terminated successfully`);
-            }).catch((error: unknown) => {
+            }).catch(async (error: unknown) => {
                 const message = error instanceof Error ? error.message : String(error);
                 this.logger.error(`Agent ${agentId} initialization failed: ${message}`, error);
-                writer.write({ error: `Code generation failed: ${message}` });
-                writer.write("terminate");
-                writer.close();
+                await writer.write({ error: `Code generation failed: ${message}` });
+                await writer.write("terminate");
             });
 
             this.logger.info(`Agent ${agentId} init launched successfully`);
@@ -200,7 +198,7 @@ export class CodingAgentController extends BaseController {
             }
 
             // Extract user for rate limiting
-            const user = context.user!;
+            const user = context.user;
             if (!user) {
                 return CodingAgentController.createErrorResponse('Missing user', 401);
             }

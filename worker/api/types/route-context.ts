@@ -20,6 +20,11 @@ export interface RouteContext {
     sessionId: string | null;
 
     /**
+     * Session expiry (null if not authenticated or public route)
+     */
+    sessionExpiresAt: Date | null;
+
+    /**
      * Global configurations for the application
      */
     config: GlobalConfigurableSettings;

@@ -45,8 +45,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Token refresh interval - refresh every 10 minutes
-const TOKEN_REFRESH_INTERVAL = 60 * 60 * 1000; // 1 hour (check less frequently since tokens last 24h)
+// Token refresh interval
+const TOKEN_REFRESH_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -124,7 +124,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           userId: response.data.user.id,
           email: response.data.user.email,
           sessionId: response.data.sessionId || response.data.user.id,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours expiry
+          expiresAt: response.data.expiresAt ? new Date(response.data.expiresAt) : null,
         });
 
         // Setup token refresh

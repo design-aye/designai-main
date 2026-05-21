@@ -60,13 +60,13 @@ export interface TokenPayload {
 export interface AuthUserSession {
     user: AuthUser;
     sessionId: string;
+    expiresAt: Date | null;
 }
 
 /**
  * Authentication result from login/register operations
  */
 export interface AuthResult extends AuthUserSession {
-    expiresAt: Date | null;
 	accessToken: string;
 	isNewUser?: boolean;
 	requiresEmailVerification?: boolean;
