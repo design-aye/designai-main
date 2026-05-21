@@ -166,6 +166,13 @@ export function useChat({
 		]);
 	}, []);
 
+	const clearDeploymentTimeout = useCallback(() => {
+		if (deploymentTimeoutRef.current) {
+			clearTimeout(deploymentTimeoutRef.current);
+			deploymentTimeoutRef.current = null;
+		}
+	}, []);
+
 	// Create the WebSocket message handler
 	// eslint-disable-next-line react-hooks/exhaustive-deps
 	const handleWebSocketMessage = useCallback(
@@ -605,13 +612,6 @@ export function useChat({
 	const handleResumeGeneration = useCallback(() => {
 		sendWebSocketMessage(websocket, 'resume_generation');
 	}, [websocket]);
-
-	const clearDeploymentTimeout = useCallback(() => {
-		if (deploymentTimeoutRef.current) {
-			clearTimeout(deploymentTimeoutRef.current);
-			deploymentTimeoutRef.current = null;
-		}
-	}, []);
 
 	const handleDeployToCloudflare = useCallback(async (instanceId: string) => {
 		try {

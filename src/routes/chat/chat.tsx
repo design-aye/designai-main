@@ -69,6 +69,9 @@ export default function Chat() {
 	// Manual refresh trigger for preview
 	const [manualRefreshTrigger, setManualRefreshTrigger] = useState(0);
 
+	// Terminal message handler — UI is currently disabled; wire up state here when re-enabling the terminal view
+	const handleTerminalMessage = useCallback((_log: TerminalLog) => {}, []);
+
 	// Debug message utilities
 	const addDebugMessage = useCallback(
 		(
@@ -164,12 +167,6 @@ export default function Chat() {
 	const [selectedCode, setSelectedCode] = useState('');
 	const [aiEditInstruction, setAiEditInstruction] = useState('');
 	const [isAiEditing, setIsAiEditing] = useState(false);
-
-	// Terminal state — UI currently disabled but logs are collected for when it's re-enabled
-	const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>([]);
-	const handleTerminalMessage = useCallback((log: TerminalLog) => {
-		setTerminalLogs((prev) => [...prev, log]);
-	}, []);
 
 	// Debug panel state
 	const [debugMessages, setDebugMessages] = useState<DebugMessage[]>([]);
