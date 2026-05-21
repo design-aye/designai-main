@@ -722,6 +722,7 @@ export class AuthService extends BaseService {
             return {
                 user,
                 sessionId: payload.sessionId,
+                expiresAt: new Date(payload.exp * 1000),
             };
         } catch (error) {
             logger.error('Token validation error', error);

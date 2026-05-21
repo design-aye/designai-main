@@ -61,6 +61,7 @@ export interface HandleMessageDeps {
     updateStage: (stageId: string, updates: any) => void;
     sendMessage: (message: any) => void;
     loadBootstrapFiles: (files: FileType[]) => void;
+    clearDeploymentTimeout?: () => void;
     onDebugMessage?: (
         type: 'error' | 'warning' | 'info' | 'websocket',
         message: string,
@@ -114,6 +115,7 @@ export function createWebSocketMessageHandler(deps: HandleMessageDeps) {
             updateStage,
             sendMessage,
             loadBootstrapFiles,
+            clearDeploymentTimeout,
             onDebugMessage,
             onTerminalMessage,
         } = deps;
@@ -228,8 +230,8 @@ export function createWebSocketMessageHandler(deps: HandleMessageDeps) {
 
                     setIsInitialStateRestored(true);
 
-                    if (state.generatedFilesMap && Object.keys(state.generatedFilesMap).length > 0 && 
-                        urlChatId !== 'new') {
+                    if (state.generatedFilesMap && Object.keys(state.generatedFilesMap).length > 0 &&
+                        urlChatId !== 'new' && !previewUrl) {
                         logger.debug('🚀 Requesting preview deployment for existing chat with files');
                         sendWebSocketMessage(websocket, 'preview');
                     }
@@ -552,6 +554,7 @@ export function createWebSocketMessageHandler(deps: HandleMessageDeps) {
             }
 
             case 'cloudflare_deployment_completed': {
+                clearDeploymentTimeout?.();
                 setIsDeploying(false);
                 setCloudflareDeploymentUrl(message.deploymentUrl);
                 setDeploymentError('');
@@ -586,6 +589,7 @@ export function createWebSocketMessageHandler(deps: HandleMessageDeps) {
             }
 
             case 'cloudflare_deployment_error': {
+                clearDeploymentTimeout?.();
                 setIsDeploying(false);
                 setDeploymentError(message.error || 'Unknown deployment error');
                 setCloudflareDeploymentUrl('');

@@ -72,6 +72,9 @@ export function useChat({
 	const shouldReconnectRef = useRef(true);
 	// Track the latest connection attempt to avoid handling stale socket events
 	const connectAttemptIdRef = useRef(0);
+	// Ref-tracked deployment state to avoid stale closures inside setTimeout
+	const isDeployingRef = useRef(false);
+	const deploymentTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const [chatId, setChatId] = useState<string>();
 	const [messages, setMessages] = useState<ChatMessage[]>([
 		{ type: 'ai', id: 'main', message: 'Thinking...', isThinking: true },
@@ -153,7 +156,7 @@ export function useChat({
 		setMessages(prev => [...prev, createUserMessage(message)]);
 	}, []);
 
-	const loadBootstrapFiles = (files: FileType[]) => {
+	const loadBootstrapFiles = useCallback((files: FileType[]) => {
 		setBootstrapFiles((prev) => [
 			...prev,
 			...files.map((file) => ({
@@ -161,7 +164,14 @@ export function useChat({
 				language: getFileType(file.filePath),
 			})),
 		]);
-	};
+	}, []);
+
+	const clearDeploymentTimeout = useCallback(() => {
+		if (deploymentTimeoutRef.current) {
+			clearTimeout(deploymentTimeoutRef.current);
+			deploymentTimeoutRef.current = null;
+		}
+	}, []);
 
 	// Create the WebSocket message handler
 	// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -203,6 +213,7 @@ export function useChat({
 			updateStage,
 			sendMessage,
 			loadBootstrapFiles,
+			clearDeploymentTimeout,
 			onDebugMessage,
 			onTerminalMessage,
 		} as HandleMessageDeps),
@@ -220,6 +231,7 @@ export function useChat({
 			updateStage,
 			sendMessage,
 			loadBootstrapFiles,
+			clearDeploymentTimeout,
 			onDebugMessage,
 			onTerminalMessage,
 		]
@@ -548,6 +560,11 @@ export function useChat({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
+	// Keep deployment ref in sync so setTimeout callbacks read fresh state
+	useEffect(() => {
+		isDeployingRef.current = isDeploying;
+	}, [isDeploying]);
+
 	// Mount/unmount: enable/disable reconnection and clear pending retries
 	useEffect(() => {
 		shouldReconnectRef.current = true;
@@ -555,6 +572,9 @@ export function useChat({
 			shouldReconnectRef.current = false;
 			retryTimeouts.current.forEach(clearTimeout);
 			retryTimeouts.current = [];
+			if (deploymentTimeoutRef.current) {
+				clearTimeout(deploymentTimeoutRef.current);
+			}
 		};
 	}, []);
 
@@ -599,34 +619,29 @@ export function useChat({
 			if (sendWebSocketMessage(websocket, 'deploy', { instanceId })) {
 				logger.debug('🚀 Deployment WebSocket message sent:', instanceId);
 
-				// Set 1-minute timeout for deployment
-				setTimeout(() => {
-					if (isDeploying) {
-						logger.warn('⏰ Deployment timeout after 1 minute');
+				// Cancel any previous timeout before arming a fresh one
+				clearDeploymentTimeout();
+				deploymentTimeoutRef.current = setTimeout(() => {
+					// isDeployingRef.current reflects the latest React state without stale closure
+					if (!isDeployingRef.current) return;
 
-						// Reset deployment state
-						setIsDeploying(false);
-						setCloudflareDeploymentUrl('');
-						setIsRedeployReady(false);
+					logger.warn('⏰ Deployment timeout after 1 minute');
+					setIsDeploying(false);
+					setCloudflareDeploymentUrl('');
+					setIsRedeployReady(false);
+					deploymentTimeoutRef.current = null;
 
-						// Show timeout message
-						sendMessage({
-							id: 'deployment_timeout',
-							message: `⏰ Deployment timed out after 1 minute.\n\n🔄 Please try deploying again. The server may be busy.`,
-						});
+					sendMessage({
+						id: 'deployment_timeout',
+						message: `⏰ Deployment timed out after 1 minute.\n\n🔄 Please try deploying again. The server may be busy.`,
+					});
 
-						// Debug logging for timeout
-						onDebugMessage?.('warning',
-							'Deployment Timeout',
-							`Deployment for ${instanceId} timed out after 60 seconds`,
-							'Deployment Timeout Management'
-						);
-					}
-				}, 60000); // 1 minute = 60,000ms
-
-				// Store timeout ID for cleanup if deployment completes early
-				// Note: In a real implementation, you'd want to clear this timeout
-				// when deployment completes successfully
+					onDebugMessage?.('warning',
+						'Deployment Timeout',
+						`Deployment for ${instanceId} timed out after 60 seconds`,
+						'Deployment Timeout Management'
+					);
+				}, 60000);
 
 			} else {
 				throw new Error('WebSocket connection not available');
@@ -634,19 +649,18 @@ export function useChat({
 		} catch (error) {
 			logger.error('❌ Error sending deployment WebSocket message:', error);
 
-			// Set deployment state immediately for UI feedback
-			setIsDeploying(true);
-			// Clear any previous deployment error
-			setDeploymentError('');
+			const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+			setIsDeploying(false);
+			setDeploymentError(errorMessage);
 			setCloudflareDeploymentUrl('');
-			setIsRedeployReady(false);
+			setIsRedeployReady(true);
 
 			sendMessage({
 				id: 'deployment_error',
-				message: `❌ Failed to initiate deployment: ${error instanceof Error ? error.message : 'Unknown error'}\n\n🔄 You can try again.`,
+				message: `❌ Failed to initiate deployment: ${errorMessage}\n\n🔄 You can try again.`,
 			});
 		}
-	}, [websocket, sendMessage, isDeploying, onDebugMessage]);
+	}, [websocket, sendMessage, clearDeploymentTimeout, onDebugMessage]);
 
 	const handleSyncPreview = useCallback(() => {
 		sendWebSocketMessage(websocket, 'sync_preview');

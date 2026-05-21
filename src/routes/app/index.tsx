@@ -533,7 +533,7 @@ export default function AppView() {
 			<div className="container mx-auto px-4 pb-6 space-y-6 flex flex-col flex-1">
 				{/* Back button */}
 				<button
-					onClick={() => history.back()}
+					onClick={() => navigate(-1)}
 					className="gap-2 flex items-center text-text-primary/80"
 				>
 					<ChevronLeft className="h-4 w-4" />
