@@ -2,7 +2,6 @@ import { jwtVerify, SignJWT } from 'jose';
 import { TokenPayload } from '../types/auth-types';
 import { SecurityError, SecurityErrorType } from 'shared/types/errors';
 import { createLogger } from '../logger';
-import { SessionService } from 'worker/database/services/SessionService';
 
 const logger = createLogger('JWTUtils');
 
@@ -111,7 +110,7 @@ export class JWTUtils {
         accessToken: string;
         expiresIn: number;
     }> {
-        const accessTokenExpiry = SessionService.config.sessionTTL;
+        const accessTokenExpiry = 3 * 24 * 60 * 60; // 3 days (matches SessionService config)
 
         const payload = { sub: userId, email, sessionId };
 

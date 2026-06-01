@@ -184,10 +184,18 @@ const worker = {
 				if (!pathname.startsWith('/api/')) {
 					const response = await env.ASSETS.fetch(request);
 
-					// If asset not found (404), fallback to index.html for SPA routing
-					if (response.status === 404 && !pathname.includes('.')) {
-						const indexRequest = new Request(new URL('/', request.url), request);
-						return env.ASSETS.fetch(indexRequest);
+					// If the asset was not found, fall back to index.html for SPA
+					// client-side routing — BUT only if the path does not end with
+					// a real file extension (.js, .css, .png, etc.).
+					// We check the LAST segment only so that routes like
+					// /app/my.project still receive the SPA fallback.
+					if (response.status === 404) {
+						const lastSegment = pathname.split('/').pop() ?? '';
+						const hasFileExtension = /\.(?:js|css|png|jpg|jpeg|gif|svg|ico|woff2?|ttf|eot|map|json|txt|xml|webp|avif|wasm)$/i.test(lastSegment);
+						if (!hasFileExtension) {
+							const indexRequest = new Request(new URL('/', request.url), request);
+							return env.ASSETS.fetch(indexRequest);
+						}
 					}
 
 					return response;

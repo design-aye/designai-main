@@ -62,8 +62,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sync user context with Sentry for error tracking
   useSentryUser(user);
 
-  // Ref to store the refresh timer
-  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // Ref to store the refresh timer — use browser-compatible type
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Redirect URL management
   const INTENDED_URL_KEY = 'auth_intended_url';
@@ -112,6 +112,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  // Setup automatic session validation (cookie-based)
+  const setupTokenRefresh = useCallback(() => {
+    // Clear any existing timer
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+    }
+
+    // Set up session validation timer - less frequent since cookies handle refresh
+    refreshTimerRef.current = setInterval(async () => {
+      try {
+        const response = await apiClient.getProfile(true);
+
+        if (!response.success) {
+          // Session invalid, user needs to login again
+          setUser(null);
+          setToken(null);
+          setSession(null);
+          clearInterval(refreshTimerRef.current!);
+        }
+      } catch (error) {
+        console.error('Session validation failed:', error);
+      }
+    }, TOKEN_REFRESH_INTERVAL);
+  }, []);
+
   // Check authentication status
   const checkAuth = useCallback(async () => {
     try {
@@ -142,33 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Setup automatic session validation (cookie-based)
-  const setupTokenRefresh = useCallback(() => {
-    // Clear any existing timer
-    if (refreshTimerRef.current) {
-      clearInterval(refreshTimerRef.current);
-    }
-
-    // Set up session validation timer - less frequent since cookies handle refresh
-    refreshTimerRef.current = setInterval(async () => {
-      try {
-        const response = await apiClient.getProfile(true);
-
-        if (!response.success) {
-          // Session invalid, user needs to login again
-          setUser(null);
-          setToken(null);
-          setSession(null);
-          clearInterval(refreshTimerRef.current!);
-        }
-      } catch (error) {
-        console.error('Session validation failed:', error);
-      }
-    }, TOKEN_REFRESH_INTERVAL);
-  }, []);
+  }, [setupTokenRefresh]);
 
   // Cleanup refresh timer on unmount
   useEffect(() => {
