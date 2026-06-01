@@ -52,7 +52,7 @@ export class NDJSONStreamParser {
                 try {
                     const message = JSON.parse(line);
                     this.onMessage(message);
-                } catch (error) {
+                } catch {
                     // Silently ignore invalid JSON
                     console.warn('Invalid JSON in NDJSON stream:', line);
                 }

@@ -203,7 +203,7 @@ export function ModelConfigTabs({
       try {
         await onTestConfig(config.key);
         successCount++;
-      } catch (error) {
+      } catch {
         errorCount++;
       }
     }

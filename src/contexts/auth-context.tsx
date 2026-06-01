@@ -62,7 +62,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sync user context with Sentry for error tracking
   useSentryUser(user);
 
-  // Ref to store the refresh timer — use browser-compatible type
   const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Redirect URL management

@@ -31,16 +31,7 @@ export function initSentry() {
     tunnel: '/api/sentry/tunnel',
 
     integrations: [
-      // React Router v7 integration — hooks are imported lazily here to avoid
-      // being pulled into the module graph before react-router is initialized.
-      Sentry.reactRouterV7BrowserTracingIntegration({
-        useEffect: () => require('react').useEffect,
-        useLocation: () => require('react-router').useLocation,
-        useNavigationType: () => require('react-router').useNavigationType,
-        createRoutesFromChildren: () =>
-          require('react-router').createRoutesFromChildren,
-        matchRoutes: () => require('react-router').matchRoutes,
-      }),
+      Sentry.browserTracingIntegration(),
 
       // Session Replay
       Sentry.replayIntegration({

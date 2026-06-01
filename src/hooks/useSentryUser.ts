@@ -24,7 +24,7 @@ export function useSentryUser(user: AuthUser | null) {
  * Hook to track user actions as breadcrumbs
  */
 export function useSentryBreadcrumb() {
-  return (message: string, data?: Record<string, any>) => {
+  return (message: string, data?: Record<string, unknown>) => {
     addBreadcrumb(message, 'user-action', 'info', data);
   };
 }
