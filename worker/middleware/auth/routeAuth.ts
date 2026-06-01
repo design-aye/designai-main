@@ -160,6 +160,7 @@ export async function enforceAuthRequirement(c: Context<AppEnv>): Promise<Respon
         user = userSession.user;
         c.set('user', user);
         c.set('sessionId', userSession.sessionId);
+        c.set('sessionExpiresAt', userSession.expiresAt);
         Sentry.setUser({ id: user.id, email: user.email });
 
         const config = await getUserConfigurableSettings(c.env, user.id);

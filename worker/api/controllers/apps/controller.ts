@@ -105,7 +105,7 @@ export class AppController extends BaseController {
     }
 
     // Get public apps feed (like a global board)
-   static getPublicApps = async function(this: AppController, request: Request, env: Env, _ctx: ExecutionContext, _context: RouteContext): Promise<ControllerResponse<ApiResponse<PublicAppsData>>> {
+    static async getPublicApps(request: Request, env: Env, _ctx: ExecutionContext, _context: RouteContext): Promise<ControllerResponse<ApiResponse<PublicAppsData>>> {
         try {
             const url = new URL(request.url);
             

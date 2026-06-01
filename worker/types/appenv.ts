@@ -7,6 +7,7 @@ export type AppEnv = {
   Variables: {
     user: AuthUser | null;
     sessionId: string | null;
+    sessionExpiresAt: Date | null;
     config: GlobalConfigurableSettings;
     authLevel: AuthRequirement;
   };

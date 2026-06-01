@@ -14,10 +14,9 @@
     "binding": "CF_VERSION_METADATA"
   },
   "assets": {
-    "directory": "dist",
+    "directory": "dist/client",
     "not_found_handling": "single-page-application",
-    // "run_worker_first": ["!/src/*", "!/api/docs/*"],
-    "run_worker_first": true,
+    "run_worker_first": ["/api/*"],
     "binding": "ASSETS"
   },
   "observability": {

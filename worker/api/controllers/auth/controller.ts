@@ -243,7 +243,8 @@ export class AuthController extends BaseController {
             }
             return AuthController.createSuccessResponse({
                 user: mapUserResponse(routeContext.user),
-                sessionId: routeContext.sessionId
+                sessionId: routeContext.sessionId,
+                expiresAt: routeContext.sessionExpiresAt,
             });
         } catch (error) {
             return AuthController.handleError(error, 'get profile');

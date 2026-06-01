@@ -41,6 +41,9 @@ debugging.ipynb
 .env.sentry-build-plugin
 data-dump
 
+# Claude Code local directory
+.claude/
+
 # Artifacts & Local Tools
 *.zip
 *.bak

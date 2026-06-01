@@ -45,8 +45,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Token refresh interval - refresh every 10 minutes
-const TOKEN_REFRESH_INTERVAL = 60 * 60 * 1000; // 1 hour (check less frequently since tokens last 24h)
+// Token refresh interval
+const TOKEN_REFRESH_INTERVAL = 60 * 60 * 1000; // 1 hour
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -62,8 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Sync user context with Sentry for error tracking
   useSentryUser(user);
 
-  // Ref to store the refresh timer
-  const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const refreshTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Redirect URL management
   const INTENDED_URL_KEY = 'auth_intended_url';
@@ -112,39 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Check authentication status
-  const checkAuth = useCallback(async () => {
-    try {
-      const response = await apiClient.getProfile(true);
-
-      if (response.success && response.data?.user) {
-        setUser({ ...response.data.user, isAnonymous: false } as AuthUser);
-        setToken(null); // Profile endpoint doesn't return token, cookies are used
-        setSession({
-          userId: response.data.user.id,
-          email: response.data.user.email,
-          sessionId: response.data.sessionId || response.data.user.id,
-          expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours expiry
-        });
-
-        // Setup token refresh
-        setupTokenRefresh();
-      } else {
-        setUser(null);
-        setToken(null);
-        setSession(null);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      setUser(null);
-      setToken(null);
-      setSession(null);
-    } finally {
-      setIsLoading(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   // Setup automatic session validation (cookie-based)
   const setupTokenRefresh = useCallback(() => {
     // Clear any existing timer
@@ -169,6 +135,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }, TOKEN_REFRESH_INTERVAL);
   }, []);
+
+  // Check authentication status
+  const checkAuth = useCallback(async () => {
+    try {
+      const response = await apiClient.getProfile(true);
+
+      if (response.success && response.data?.user) {
+        setUser({ ...response.data.user, isAnonymous: false } as AuthUser);
+        setToken(null); // Profile endpoint doesn't return token, cookies are used
+        setSession({
+          userId: response.data.user.id,
+          email: response.data.user.email,
+          sessionId: response.data.sessionId || response.data.user.id,
+          expiresAt: response.data.expiresAt ? new Date(response.data.expiresAt) : null,
+        });
+
+        // Setup token refresh
+        setupTokenRefresh();
+      } else {
+        setUser(null);
+        setToken(null);
+        setSession(null);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      setUser(null);
+      setToken(null);
+      setSession(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [setupTokenRefresh]);
 
   // Cleanup refresh timer on unmount
   useEffect(() => {

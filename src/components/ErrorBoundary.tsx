@@ -45,18 +45,11 @@ function ErrorFallback({ error, resetError }: { error: Error | unknown; resetErr
 
 interface ErrorBoundaryProps {
   children: ReactNode;
-  showDialog?: boolean;
 }
 
-export function ErrorBoundary({ 
-  children, 
-  showDialog = false 
-}: ErrorBoundaryProps) {
+export function ErrorBoundary({ children }: ErrorBoundaryProps) {
   return (
-    <Sentry.ErrorBoundary
-      fallback={ErrorFallback}
-      showDialog={showDialog}
-    >
+    <Sentry.ErrorBoundary fallback={ErrorFallback}>
       {children}
     </Sentry.ErrorBoundary>
   );
