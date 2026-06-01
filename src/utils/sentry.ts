@@ -1,13 +1,10 @@
 import * as Sentry from '@sentry/react';
+import { useEffect } from 'react';
+import { useLocation, useNavigationType, createRoutesFromChildren, matchRoutes } from 'react-router';
 
 /**
  * Initialize Sentry for frontend error tracking and session replay.
- *
- * IMPORTANT: All react-router hook references are passed lazily via inline
- * require() calls inside the integration options. This prevents a circular
- * module dependency between @sentry/react → react-router → @sentry/react
- * that caused a Temporal Dead Zone (TDZ) ReferenceError in the production
- * vendor chunk and rendered the app as a blank page.
+ * React Router hooks are imported at module level to avoid circular dependencies.
  */
 export function initSentry() {
   const dsn = import.meta.env.VITE_SENTRY_DSN;
@@ -31,7 +28,14 @@ export function initSentry() {
     tunnel: '/api/sentry/tunnel',
 
     integrations: [
-      Sentry.browserTracingIntegration(),
+      // React Router v7 integration with hooks passed at module initialization time
+      Sentry.reactRouterV7BrowserTracingIntegration({
+        useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes,
+      }),
 
       // Session Replay
       Sentry.replayIntegration({
